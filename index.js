@@ -2,21 +2,21 @@ const uri = process.env.MONGODB_URI;
 const PORT = process.env.PORT || 3000;
 const MongoClient = require('mongodb').MongoClient;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
-client.connect(err => {
+/*client.connect(err => {
   const collection = client.db("test").collection("devices");
   // perform actions on the collection object
   client.close();
-});
+});*/
 
 'use strict';
 
 const Hapi = require('@hapi/hapi');
 
 const init = async () => {
-
+    await client.connect();
     const server = Hapi.server({
         port: PORT,
-        host: 'localhost'
+        host: '0.0.0.0'
     });
 
     server.route({
