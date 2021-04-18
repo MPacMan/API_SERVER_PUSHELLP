@@ -13,7 +13,7 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 const Hapi = require('@hapi/hapi');
 
 const init = async () => {
-    await client.connect();
+   // await client.connect();
     const server = Hapi.server({
         port: PORT,
         host: '0.0.0.0'
