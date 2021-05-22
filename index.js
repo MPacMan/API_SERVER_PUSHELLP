@@ -1,20 +1,24 @@
+'use strict';
+
 //prendre en compte les variables dans .env
 require('dotenv').config()
 
 //connection de la bdd Postgres
 const HapiPostgresConnection = require('hapi-postgres-connection');
 
-const uri = process.env.MONGODB_URI;
 const PORT = process.env.PORT || 3000;
-const MongoClient = require('mongodb').MongoClient;
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
-'use strict';
+//jeton JWT
+var jwt = require('jsonwebtoken');
+
+//hash algorithm pbkdf2
+var pbkdf2 = require('pbkdf2')
 
 const Hapi = require('@hapi/hapi');
 
 const init = async () => {
-   await client.connect();
+    const response = {};
+    response.error = null;
 
     const server = Hapi.server({
         port: PORT,
@@ -30,6 +34,75 @@ const init = async () => {
         path: '/',
         handler: (request, h) => {
 
+            return 'Hello World!';
+        }
+    });
+    // server.route({
+    //     method: 'GET',
+    //     path: '/',
+    //     options: {
+    //         pre: [
+    //           { method: handleAuthenticateToken, assign: 'auth', failAction: 'log' },
+    //         ],
+    //     },
+    //     handler: (request, h) => {
+    //     // the user is not connected
+    //     if (request.pre.auth.output) {
+    //         response.error = 'Utilisateur non connecté';
+    //         return h.response(response).code(401);
+    //     }
+    //     // is the data in the token have the user id?
+    //     if (!request.pre.auth.id) {
+    //         response.error = 'Pas d\'id trouvé';
+    //         return h.response(response).code(401);
+    //     }
+    //         return 'Hello World!';
+    //     }
+    // });
+    server.route({
+        method: 'POST',
+        path: '/login',
+        handler: async (request, h) => {
+            //the request doesn't have the username or password
+            if(!request.payload || !request.payload.username || !request.payload.password){
+                response.error = "You must give a username and password";
+                return h.response(response).code(401);
+            }
+            // let query = "SELECT * FROM public.individual WHERE pseudo = 'Ludovic';";
+            // const result = await request.pg.client.query(query);
+            // //user not found in db
+            // if(!result){
+            //     response.error = "You have given a wrong username and/or password";
+            //     return h.response(response).code(401);
+            // }
+            // // Compare POST body password to postgresql passsword of user using bcrypt.compare()
+            // const match = await bcrypt.compare(password, user[0].password);
+            response.body = {
+                username : request.payload.username,
+                password : request.payload.password
+            }
+            console.log(response.body);
+            return h.response(response).code(200);
+        }
+    });
+    server.route({
+        method: 'POST',
+        path: '/signup',
+        handler: async (request, h) => {
+            //the request doesn't have the username or password
+            if(!request.payload || !request.payload.username || !request.payload.password){
+                response.error = "You must give a username and password";
+                return h.response(response).code(401);
+            }
+            let query = "INSERT INTO public.individual('Ludo', status, password, salt, registerdate) VALUES (?, ?, ?, ?, ?);";
+            const result = await request.pg.client.query(query);
+            //user not found in db
+            if(!result){
+                response.error = "You have given a wrong username and/or password";
+                return h.response(response).code(401);
+            }
+            // Compare POST body password to postgresql passsword of user using bcrypt.compare()
+            const match = await bcrypt.compare(password, user[0].password);
             return 'Hello World!';
         }
     });

@@ -22,7 +22,9 @@
     "@hapi/hapi": "^20.1.2",
     "dotenv": "^8.2.0",
     "hapi-postgres-connection": "^7.0.0",
-    "mongodb": "^3.6.6"
+    "jsonwebtoken": "^8.5.1",
+    "mongodb": "^3.6.6",
+    "pbkdf2": "^3.1.2"
   },
   "devDependencies": {
     "nodemon": "^2.0.7"
