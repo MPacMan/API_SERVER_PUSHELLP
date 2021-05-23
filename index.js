@@ -1,32 +1,34 @@
 'use strict';
 
 //prendre en compte les variables dans .env
-require('dotenv').config()
+require('dotenv').config();
 
 //connection de la bdd Postgres
-const HapiPostgresConnection = require('hapi-postgres-connection');
+const { Pool, Client } = require('pg');
+const connectionString = process.env.DATABASE_URL;
+const pool = new Pool({
+  connectionString,
+})
 
 const PORT = process.env.PORT || 3000;
 
 //jeton JWT
 var jwt = require('jsonwebtoken');
 
-//hash algorithm pbkdf2
-var pbkdf2 = require('pbkdf2')
 
 const Hapi = require('@hapi/hapi');
 
+var utils = require('./utils');
+
+
 const init = async () => {
+    //await client.connect()
     const response = {};
     response.error = null;
 
     const server = Hapi.server({
         port: PORT,
         host: '0.0.0.0'
-    });
-
-    await server.register({
-        plugin: HapiPostgresConnection
     });
 
     server.route({
@@ -68,21 +70,38 @@ const init = async () => {
                 response.error = "You must give a username and password";
                 return h.response(response).code(401);
             }
-            // let query = "SELECT * FROM public.individual WHERE pseudo = 'Ludovic';";
-            // const result = await request.pg.client.query(query);
-            // //user not found in db
-            // if(!result){
-            //     response.error = "You have given a wrong username and/or password";
-            //     return h.response(response).code(401);
-            // }
-            // // Compare POST body password to postgresql passsword of user using bcrypt.compare()
-            // const match = await bcrypt.compare(password, user[0].password);
-            response.body = {
-                username : request.payload.username,
-                password : request.payload.password
+            try {
+                const query = {
+                    text: "SELECT * FROM public.individual WHERE pseudo = $1;",
+                    values: [request.payload.username],
+                    //rowMode: 'array',
+                }
+                const result = await pool.query(query);
+                //user not found in db
+                if(!result){
+                    response.error = "You have given a wrong username and/or password";
+                    return h.response(response).code(401);
+                }
+                // // Compare POST body password to postgresql passsword of user using bcrypt.compare()
+                // const match = await bcrypt.compare(password, user[0].password);
+                response.body = {
+                    username : request.payload.username,
+                    password : request.payload.password,
+                    data : result.rows
+                }
+                console.log(response.body);
+                if(!utils.verifyIfPasswordsAreAuthentic(request.payload.password, result.rows[0].password, result.rows[0].salt)){
+                    console.log("The password are not authentic");
+                    response.error = "You have given a wrong username and/or password";
+                    return h.response(response).code(401);
+                }
+                console.log("The password are authentic!");
+                //await pool.end()
+                return h.response(response).code(200);
+            } catch (err) {
+                console.log(err.stack)
             }
-            console.log(response.body);
-            return h.response(response).code(200);
+            
         }
     });
     server.route({

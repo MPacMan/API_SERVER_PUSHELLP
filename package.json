@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js",
-    "dev": "npx nodemon server.js"
+    "dev": "nodemon server.js"
   },
   "repository": {
     "type": "git",
@@ -21,10 +21,10 @@
   "dependencies": {
     "@hapi/hapi": "^20.1.2",
     "dotenv": "^8.2.0",
-    "hapi-postgres-connection": "^7.0.0",
     "jsonwebtoken": "^8.5.1",
     "mongodb": "^3.6.6",
-    "pbkdf2": "^3.1.2"
+    "pbkdf2": "^3.1.2",
+    "pg": "^8.6.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.7"
