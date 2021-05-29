@@ -24,7 +24,6 @@ var utils = require('./utils');
 const init = async () => {
     //await client.connect()
     const response = {};
-    response.error = null;
 
     const server = Hapi.server({
         port: PORT,
@@ -65,6 +64,7 @@ const init = async () => {
         method: 'POST',
         path: '/login',
         handler: async (request, h) => {
+            response.error = null;
             //the request doesn't have the username or password
             if(!request.payload || !request.payload.username || !request.payload.password){
                 response.error = "You must give a username and password";
@@ -78,10 +78,10 @@ const init = async () => {
                 }
                 const result = await pool.query(query);
                 //user not found in db
-                if(!result){
+                if(!result.rows[0]){
                     response.error = "You have given a wrong username and/or password";
                     return h.response(response).code(401);
-                }
+                } //console.log(result);
                 // // Compare POST body password to postgresql passsword of user using bcrypt.compare()
                 // const match = await bcrypt.compare(password, user[0].password);
                 response.body = {
@@ -89,7 +89,6 @@ const init = async () => {
                     password : request.payload.password,
                     data : result.rows
                 }
-                console.log(response.body);
                 if(!utils.verifyIfPasswordsAreAuthentic(request.payload.password, result.rows[0].password, result.rows[0].salt)){
                     console.log("The password are not authentic");
                     response.error = "You have given a wrong username and/or password";
