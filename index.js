@@ -19,6 +19,7 @@ var jwt = require('jsonwebtoken');
 const Hapi = require('@hapi/hapi');
 
 var utils = require('./utils');
+const { generateSalt } = require('./utils');
 
 
 const init = async () => {
@@ -86,7 +87,7 @@ const init = async () => {
                 // const match = await bcrypt.compare(password, user[0].password);
                 response.body = {
                     username : request.payload.username,
-                    password : request.payload.password,
+                    //password : request.payload.password,
                     data : result.rows
                 }
                 if(!utils.verifyIfPasswordsAreAuthentic(request.payload.password, result.rows[0].password, result.rows[0].salt)){
@@ -107,21 +108,48 @@ const init = async () => {
         method: 'POST',
         path: '/signup',
         handler: async (request, h) => {
-            //the request doesn't have the username or password
-            if(!request.payload || !request.payload.username || !request.payload.password){
-                response.error = "You must give a username and password";
+            response.error = null;
+            //the request doesn't have all the information for inserting an individual into the database
+            if(!request.payload || !request.payload.username || !request.payload.email || !request.payload.password || !request.payload.status){
+                response.error = "You must at least give your username, password, email and profile";
                 return h.response(response).code(401);
             }
-            let query = "INSERT INTO public.individual('Ludo', status, password, salt, registerdate) VALUES (?, ?, ?, ?, ?);";
-            const result = await request.pg.client.query(query);
-            //user not found in db
-            if(!result){
-                response.error = "You have given a wrong username and/or password";
-                return h.response(response).code(401);
+            var text;
+            var values;
+            var salt = utils.generateRandomSalt();
+            var password = utils.hashPassword(request.payload.password, salt);
+            console.log("dateToday:");
+            var dateToday = utils.formatDate();
+            console.log(dateToday);
+            if(request.payload.birthday){
+                console.log("date birthday:",request.payload.birthday);
+                if(!utils.formatDate(request.payload.birthday)){
+                    response.error = "The given date has a format incorrect";
+                    return h.response(response).code(401);
+                }else{
+                    var dateBirthday = utils.formatDate()
+                    text = "INSERT INTO public.individual(pseudo, email, birthday, status, password, salt, registerdate) VALUES ($1, $2, $3, $4, $5, $6, $7);";
+                    values = [request.payload.username, request.payload.email, request.payload.birthday, request.payload.status, password, salt, dateToday];
+                }
+            }else{
+                text = "INSERT INTO public.individual(pseudo, email, status, password, salt, registerdate) VALUES ($1, $2, $3, $4, $5, $6);";
+                values = [request.payload.username, request.payload.email, request.payload.status, password, salt, dateToday];
             }
-            // Compare POST body password to postgresql passsword of user using bcrypt.compare()
-            const match = await bcrypt.compare(password, user[0].password);
-            return 'Hello World!';
+            const query = {
+                text: text,
+                values: values,
+            }
+            try{
+                const result = await pool.query(query);
+                //the insert has not been successful
+                if(!result){
+                    response.error = "An error occured during the insertion of the user";
+                    return h.response(response).code(401);
+                }
+                return h.response(response).code(200);
+            }catch (err) {
+                console.log(err.stack)
+            }
         }
     });
 
@@ -141,29 +169,6 @@ const init = async () => {
             }
         }
     });
-
-    // server.route({
-    //     method: 'PUT',
-    //     path: '/test',
-    //     handler: async (request, h) => {
-    //         var response = {};
-    //         response.error = null;
-    //         try{
-    //             const collectionNotes = client.db("API_SERVER").collection('users');
-    //             await collectionNotes.insertOne({
-    //                 userId: request.payload.id,
-    //                 username: request.payload.username,
-    //                 createdAt: Date(),
-    //             });
-    //             const docs = await collectionNotes.find({}, {sort: {_id: -1}, limit: 1 }).toArray(); //trouver le dernier document de user venant d'être créé
-    //             response.user = docs;
-    //             return h.response(response).code(200);
-    //         }catch(err){
-    //             response.error = 'Error in Database';
-    //             return h.response(response).code(401);
-    //         }
-    //     }
-    // });
 
     await server.start();
     console.log('Server running on %s', server.info.uri);
