@@ -154,6 +154,59 @@ const init = async () => {
     });
 
     server.route({
+        method: 'POST',
+        path: '/createTicket',
+        handler: async (request, h) => {
+            response.error = null;
+            response.body = [];
+            //the request doesn't have all the information for inserting a ticket into the database
+            if(!request.payload 
+                || !request.payload.title 
+                || !request.payload.deadline 
+                || !request.payload.priority
+                || !request.payload.description
+                || !request.payload.idUser){
+                response.error = "You must at least give the title, deadline, priority, description and idUser.";
+                return h.response(response).code(401);
+            }
+            
+            var values;
+            console.log("creationDate: ", utils.formatDate());
+            console.log("title: ", request.payload.title );
+            console.log("deadline: ", utils.formatDate(request.payload.deadline));
+            console.log("priority: ", request.payload.priority );
+            console.log("description: ", request.payload.description );
+            console.log("idUser: ", request.payload.idUser );
+
+            var text = "INSERT INTO public.ticket(title, creationdate, deadline, status, description, priority, individual_idindividual) VALUES ($1, $2, $3, $4, $5, $6, $7);";
+            values = [
+                request.payload.title, 
+                utils.formatDate(), 
+                utils.formatDate(request.payload.deadline), 
+                "nouveau", 
+                request.payload.description, 
+                request.payload.priority,
+                request.payload.idUser
+            ];
+            const query = {
+                text: text,
+                values: values,
+            }
+            try{
+                const result = await pool.query(query);
+                //the insert has not been successful
+                if(!result){
+                    response.error = "An error occured during the insertion of the ticket";
+                    return h.response(response).code(401);
+                }
+                return h.response(response).code(200);
+            }catch (err) {
+                console.log(err.stack)
+            }
+        }
+    });
+
+    server.route({
         method: 'GET',
         path: '/testBdd',
         handler: async (request, h) => {
