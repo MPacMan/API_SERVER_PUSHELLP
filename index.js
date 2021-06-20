@@ -205,6 +205,47 @@ const init = async () => {
             }
         }
     });
+    server.route({
+        method: 'POST',
+        path: '/getTicketListByStatus',
+        handler: async (request, h) => {
+            response.error = null;
+            response.body = [];
+            console.log("here");
+            //the request doesn't have all the information for inserting a ticket into the database
+            if(!request.payload || !request.payload.status){
+                response.error = "You must at least give the ticket status.";
+                return h.response(response).code(401);
+            }
+            
+            var values;
+            console.log("status: ", request.payload.status);
+
+            var text = "SELECT * FROM public.ticket WHERE status = $1 ORDER BY idticket ASC";
+            values = [
+                request.payload.status
+            ];
+            const query = {
+                text: text,
+                values: values,
+            }
+            try{
+                const result = await pool.query(query);
+                //the selection has not been successful
+                if(!result.rows[0]){
+                    response.error = "An error occured during the selection of the ticket";
+                    return h.response(response).code(401);
+                }
+                response.body = {
+                    data : result.rows
+                }
+                console.log(response.body.data);
+                return h.response(response).code(200);
+            }catch (err) {
+                console.log(err.stack)
+            }
+        }
+    });
 
     server.route({
         method: 'GET',
