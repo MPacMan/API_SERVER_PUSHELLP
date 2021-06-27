@@ -71,7 +71,6 @@ module.exports = {
      * @returns An encoded base64 hashed password
      */
     hashPassword: function (password, salt) {
-      console.log("Salt:", salt);
       var derivedKey = pbkdf2.pbkdf2Sync(password, salt, 65536, 24);
       return derivedKey.toString('base64');
     },
@@ -82,14 +81,8 @@ module.exports = {
      * @param {String} salt : The salt stored in database
      * @returns true if the passwords match each other, false otherwise.
      */
-    verifyIfPasswordsAreAuthentic: function(passwordRequest, hashedPasswordDB, salt){
-      console.log("PasswordRequest:", passwordRequest);
-      
+    verifyIfPasswordsAreAuthentic: function(passwordRequest, hashedPasswordDB, salt){      
       var hashedPasswordRequest = this.hashPassword(passwordRequest, salt);
-      console.log("HashedPasswordRequest:", hashedPasswordRequest);
-      console.log("HashedPasswordDB     :", hashedPasswordDB);
-      console.log(typeof hashedPasswordRequest.toString());
-      console.log(typeof hashedPasswordDB);
       if(hashedPasswordRequest.localeCompare(hashedPasswordDB)){ //if the 2 passwords are no equals
         return false;
       }else{

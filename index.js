@@ -75,19 +75,15 @@ const init = async () => {
                 const query = {
                     text: "SELECT * FROM public.individual WHERE pseudo = $1;",
                     values: [request.payload.username],
-                    //rowMode: 'array',
                 }
                 const result = await pool.query(query);
                 //user not found in db
                 if(!result.rows[0]){
                     response.error = "You have given a wrong username and/or password";
                     return h.response(response).code(401);
-                } //console.log(result);
-                // // Compare POST body password to postgresql passsword of user using bcrypt.compare()
-                // const match = await bcrypt.compare(password, user[0].password);
+                } 
                 response.body = {
                     username : request.payload.username,
-                    //password : request.payload.password,
                     data : result.rows
                 }
                 if(!utils.verifyIfPasswordsAreAuthentic(request.payload.password, result.rows[0].password, result.rows[0].salt)){
@@ -118,11 +114,8 @@ const init = async () => {
             var values;
             var salt = utils.generateRandomSalt();
             var password = utils.hashPassword(request.payload.password, salt);
-            console.log("dateToday:");
             var dateToday = utils.formatDate();
-            console.log(dateToday);
             if(request.payload.birthday){
-                console.log("date birthday:",request.payload.birthday);
                 if(!utils.formatDate(request.payload.birthday)){
                     response.error = "The given date has a format incorrect";
                     return h.response(response).code(401);
@@ -171,13 +164,6 @@ const init = async () => {
             }
             
             var values;
-            console.log("creationDate: ", utils.formatDate());
-            console.log("title: ", request.payload.title );
-            console.log("deadline: ", utils.formatDate(request.payload.deadline));
-            console.log("priority: ", request.payload.priority );
-            console.log("description: ", request.payload.description );
-            console.log("idUser: ", request.payload.idUser );
-
             var text = "INSERT INTO public.ticket(title, creationdate, deadline, status, description, priority, individual_idindividual) VALUES ($1, $2, $3, $4, $5, $6, $7);";
             values = [
                 request.payload.title, 
@@ -246,6 +232,94 @@ const init = async () => {
         }
     });
     server.route({
+        method: 'PUT',
+        path: '/setTicketStatus',
+        handler: async (request, h) => {
+            response.error = null;
+            response.body = [];
+            //the request doesn't have all the information for updating a ticket into the database
+            if(!request.payload 
+                || !request.payload.idTicket 
+                || !request.payload.status){
+                response.error = "You must at least give the idTicket and the new status.";
+                return h.response(response).code(401);
+            }
+            
+            var values;
+            var dateToday = utils.formatDate();
+            var text = "UPDATE public.ticket SET status = $1, updatedate = $2 WHERE idticket = $3;";
+            values = [
+                request.payload.status, 
+                dateToday, 
+                request.payload.idTicket
+            ];
+            const query = {
+                text: text,
+                values: values,
+            }
+            try{
+                const result = await pool.query(query);
+                //the update has not been successful
+                if(!result){
+                    response.error = "An error occured during the update of the ticket";
+                    return h.response(response).code(401);
+                }
+                response.body = {
+                    status : request.payload.status,
+                    updateDate : dateToday,
+                    data : result.rows
+                }
+                return h.response(response).code(200);
+            }catch (err) {
+                console.log(err.stack)
+            }
+        }
+    });
+    server.route({
+        method: 'PUT',
+        path: '/setTicketIdIndividual',
+        handler: async (request, h) => {
+            response.error = null;
+            response.body = [];
+            //the request doesn't have all the information for updating a ticket into the database
+            if(!request.payload 
+                || !request.payload.idTicket 
+                || !request.payload.idUser){
+                response.error = "You must at least give the idTicket and the idUser.";
+                return h.response(response).code(401);
+            }
+            
+            var values;
+            var dateToday = utils.formatDate();
+            var text = "UPDATE public.ticket SET updatedate = $1, individual_idindividual = $2 WHERE idticket = $3;";
+            values = [
+                dateToday, 
+                request.payload.idUser, 
+                request.payload.idTicket
+            ];
+            const query = {
+                text: text,
+                values: values,
+            }
+            try{
+                const result = await pool.query(query);
+                //the update has not been successful
+                if(!result){
+                    response.error = "An error occured during the update of the ticket";
+                    return h.response(response).code(401);
+                }
+                response.body = {
+                    idUser : request.payload.idUser,
+                    updateDate : dateToday,
+                    data : result.rows
+                }
+                return h.response(response).code(200);
+            }catch (err) {
+                console.log(err.stack)
+            }
+        }
+    });
+    server.route({
         method: 'GET',
         path: '/getTicketListByStatus',
         handler: async (request, h) => {
@@ -258,8 +332,6 @@ const init = async () => {
             }
             
             var values;
-            console.log("status: ", request.query.status);
-
             var text = "SELECT * FROM public.ticket WHERE status = $1 ORDER BY idticket ASC";
             values = [
                 request.query.status
