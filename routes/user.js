@@ -88,7 +88,6 @@ module.exports = [
                     response.error = "You have given a wrong username and/or password";
                     return h.response(response).code(401);
                 }
-                console.log("The password are authentic!");
                 //await pool.end()
                 return h.response(response).code(200);
             } catch (err) {
@@ -156,6 +155,48 @@ module.exports = [
             }
             try{
                 const result = await pool.query(query);
+                response.body = {
+                    data : result.rows
+                }
+                return h.response(response).code(200);
+            }catch (err) {
+                console.log(err.stack)
+            }
+        }
+    },
+    {
+        method: 'PUT',
+        path: '/setUserStatusAdminByIdUser',
+        handler: async (request, h) => {
+            response.error = null;
+            response.body = [];
+            //the request doesn't have all the information for updating an user into the database
+            if(!request.payload 
+                || !request.payload.idUserToPromote 
+                || !request.payload.idUserWhoPromotes){
+                response.error = "You must at least give the idUsers.";
+                return h.response(response).code(401);
+            }
+            
+            var values;
+            var text = "UPDATE public.individual SET status = $1, individual_idindividual = $2 WHERE idindividual = $3 AND status = $4;";
+            values = [
+                "admin", 
+                request.payload.idUserWhoPromotes, 
+                request.payload.idUserToPromote,
+                "client"
+            ];
+            const query = {
+                text: text,
+                values: values,
+            }
+            try{
+                const result = await pool.query(query);
+                //the update has not been successful
+                if(!result){
+                    response.error = "An error occured during the update of the user";
+                    return h.response(response).code(401);
+                }
                 response.body = {
                     data : result.rows
                 }
