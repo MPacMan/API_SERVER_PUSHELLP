@@ -54,6 +54,8 @@ module.exports = [
                 return h.response(response).code(200);
             }catch (err) {
                 console.log(err.stack)
+                response.error = err;
+                return h.response(response).code(400);
             }
         }
     },
@@ -90,8 +92,10 @@ module.exports = [
                 }
                 //await pool.end()
                 return h.response(response).code(200);
-            } catch (err) {
+            }catch (err) {
                 console.log(err.stack)
+                response.error = err;
+                return h.response(response).code(400);
             }
             
         }
@@ -125,6 +129,8 @@ module.exports = [
                 return h.response(response).code(200);
             }catch (err) {
                 console.log(err.stack)
+                response.error = err;
+                return h.response(response).code(400);
             }
         }
     },
@@ -161,6 +167,8 @@ module.exports = [
                 return h.response(response).code(200);
             }catch (err) {
                 console.log(err.stack)
+                response.error = err;
+                return h.response(response).code(400);
             }
         }
     },
@@ -203,6 +211,51 @@ module.exports = [
                 return h.response(response).code(200);
             }catch (err) {
                 console.log(err.stack)
+                response.error = err;
+                return h.response(response).code(400);
+            }
+        }
+    },
+    {
+        method: 'DELETE',
+        path: '/deleteUserById',
+        handler: async (request, h) => {
+            response.error = null;
+            response.body = [];
+            //the request doesn't have all the information for deleting an user from the database
+            if(!request.payload 
+                || !request.payload.idUser){
+                response.error = "You must at least give the idUser.";
+                return h.response(response).code(401);
+            }
+            
+            var values;
+            var text = "DELETE FROM public.individual WHERE idindividual = $1 AND (status = $2 OR status = $3);"; //to delete a user, we must have his id and his status must be either "client" or "admin"
+            values = [
+                request.payload.idUser,
+                "admin", 
+                "client"
+            ];
+            const query = {
+                text: text,
+                values: values,
+            }
+            try{
+                const result = await pool.query(query);
+
+                //the deletion has not been successful
+                if(!result){
+                    response.error = "An error occured during the deletion of the user";
+                    return h.response(response).code(401);
+                }
+                response.body = {
+                    data : result.rows
+                }
+                return h.response(response).code(200);
+            }catch (err) {
+                console.log(err.stack)
+                response.error = err;
+                return h.response(response).code(400);
             }
         }
     }

@@ -48,6 +48,8 @@ module.exports = [
                 return h.response(response).code(200);
             }catch (err) {
                 console.log(err.stack)
+                response.error = err;
+                return h.response(response).code(400);
             }
         }
     },
@@ -81,6 +83,8 @@ module.exports = [
                 return h.response(response).code(200);
             }catch (err) {
                 console.log(err.stack)
+                response.error = err;
+                return h.response(response).code(400);
             }
         }
     }
