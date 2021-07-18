@@ -51,6 +51,10 @@ module.exports = [
                     response.error = "An error occured during the insertion of the user";
                     return h.response(response).code(401);
                 }
+                response.body = {
+                    username : request.payload.username,
+                    data : result.rows
+                }
                 return h.response(response).code(200);
             }catch (err) {
                 console.log(err.stack)
@@ -81,16 +85,15 @@ module.exports = [
                     response.error = "You have given a wrong username and/or password";
                     return h.response(response).code(401);
                 } 
-                response.body = {
-                    username : request.payload.username,
-                    data : result.rows
-                }
                 if(!utils.verifyIfPasswordsAreAuthentic(request.payload.password, result.rows[0].password, result.rows[0].salt)){
                     console.log("The password are not authentic");
                     response.error = "You have given a wrong username and/or password";
                     return h.response(response).code(401);
                 }
-                //await pool.end()
+                response.body = {
+                    username : request.payload.username,
+                    data : result.rows
+                }
                 return h.response(response).code(200);
             }catch (err) {
                 console.log(err.stack)
