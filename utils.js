@@ -89,5 +89,15 @@ module.exports = {
         return true;
       }
     },
+    /**
+     * Function to get the extension of the given filename
+     * @param {String} filename The filename where to get the extension
+     * @returns the file extension as a String
+     */
+    getExtensionOfFileName: function(filename){
+      var fileNameSplited = filename.split('.');
+      var extension = fileNameSplited[fileNameSplited.length-1];
+      return extension;
+    }
     
 };
