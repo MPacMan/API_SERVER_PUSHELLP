@@ -13,10 +13,6 @@ const { Readable } = require('stream');
 
 const fs = require('fs')
 
-//upload package parser
-const multer = require('multer');
-const upload = multer({dest: './uploads/images/sections'});
-
 var utils = require('../utils');
 const response = {};
 
@@ -46,13 +42,16 @@ module.exports = [
         handler: async (req, h) => {
             response.error = null;
             response.body = [];
+            console.log(req);
             //the request doesn't have all the information for uploading an image into the api-server
             if(!req.payload || !req.payload.file){
                 response.error = "You must at least give a file to upload";
                 return h.response(response).code(401);
             }
+            console.log("data:", req.payload.file);
             const data = req.payload.file;
-            const name = data.hapi.filename;
+            console.log("mama");
+            const name = data.filename;
 
             var extension = utils.getExtensionOfFileName(name);
             console.log(extension);
@@ -71,8 +70,8 @@ module.exports = [
 
             data.on('end', (err) => { 
                 const ret = {
-                    filename: data.hapi.filename,
-                    headers: data.hapi.headers
+                    filename: data.filename,
+                    headers: data.headers
                 }
                 return JSON.stringify(ret);
             })
