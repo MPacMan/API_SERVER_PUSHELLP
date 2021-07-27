@@ -48,13 +48,10 @@ module.exports = [
                 response.error = "You must at least give a file to upload";
                 return h.response(response).code(401);
             }
-            console.log("data:", req.payload.file);
             const data = req.payload.file;
-            console.log("mama");
             const name = data.filename;
 
             var extension = utils.getExtensionOfFileName(name);
-            console.log(extension);
             //the file is not an image
             if(extension != "png" && extension != "jpg" && extension != "svg" && extension != "webp"){
                 response.error = "The file must be an image";

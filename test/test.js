@@ -7,14 +7,6 @@ const { init } = require('../lib/server');
 const { indexOf } = require('../routes/user');
 
 let server;
-
-    // beforeEach(async () => {
-    //     server = await init();
-    // });
-
-    // afterEach(async () => {
-    //     await server.stop();
-    // });
     
 /**** first tests ****/
 it('returns true when 1 + 1 equals 2', () => {
@@ -76,7 +68,6 @@ describe('Users:', () => {
         });
         var indexToIdIndividual = res.payload.indexOf("idindividual") + ("idindividual\":".length); //get the id test user hapi from the response payload
         idHapiTestUser = res.payload.slice(indexToIdIndividual, indexToIdIndividual+2);
-        console.log(idHapiTestUser);    
         expect(res.statusCode).to.equal(200);
     });
 
